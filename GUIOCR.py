@@ -52,7 +52,7 @@ def browsebutton():
     shutil.copy(file_path,os.curdir)
     print(os.path.basename(file_path))
     os.rename(os.path.basename(file_path), "TempInput.pdf")
-    p = Popen("/home/dass/Coding/Python/CV/GS.sh")
+    p = Popen("GS.bat")
     stdout, stderr = p.communicate()
     imagedefault()
     readimage()
@@ -111,6 +111,17 @@ def imageflat(new_img3):
     value = value.flatten()
     return value
     
+
+def deleteblanklineincsv(filenamecsv, templen):
+    f = open(filenamecsv,"r+")
+    d = f.readlines()
+    f.seek(0)
+    for i in d:
+        if len(i) >= templen:
+            f.write(i)
+    f.truncate()
+    f.close()
+
 
 def outputdisplaty():
     pagenu, fieldnu = [], []
@@ -196,7 +207,7 @@ def readimage():
     looprc2 = 10
     pagenumber = 0
     try:
-        os.remove("/home/dass/Coding/Python/CV/SubSplit.csv")
+        os.remove("SubSplit.csv")
     except:
         print("Uable to delete subsplit.csv")
     
@@ -215,7 +226,7 @@ def readimage():
             samples =  np.empty((0,100))
             responses = []
             keys = [i for i in range(48,58)]
-            print(len(contours))
+            #print(len(contours))
             idx = 0
             y2 = 0
             for c in contours:
@@ -230,7 +241,7 @@ def readimage():
                     cv2.rectangle(imtemp,(x,y),(x+w,y+h),(0,0,255),2)
                     cv2.imwrite('Dmark' + 'P' + str(pagenumber) + 'N' + str(rc) + '.png',imtemp)
                     idx+=1
-                    print(str(idx) + " x = " + str(x) + " y = " + str(y) + " w = " + str(w) + " h = " + str(h))
+                    #print(str(idx) + " x = " + str(x) + " y = " + str(y) + " w = " + str(w) + " h = " + str(h))
                     new_img=im[y:y+h,x:x+w]
                     cv2.imwrite('Dval' + 'P' + str(pagenumber) + 'N' + str(rc) + '.png',new_img)
                     left_img = im[y:y+h,0:x]
@@ -240,53 +251,90 @@ def readimage():
                     blur3 = cv2.GaussianBlur(gray3,(5,5),0)
                     thresh3 = cv2.adaptiveThreshold(blur3,255,1,1,11,2)
                     im3, contours3,hierarchy3 = cv2.findContours(thresh3,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
-                    print(len(contours3))
+                    #print(len(contours3))
                     for c3 in contours3:
                         x3,y3,w3,h3 = cv2.boundingRect(c3)
 ##                        with open("SubSplit.csv", 'a') as f:
 ##                            writer = csv.writer(f)
 ##                            writer.writerow(cv2.boundingRect(c) + cv2.boundingRect(c3) + tuple(['Dmark' + 'P' + str(pagenumber) + 'N' + str(rc) + '.png', str(pagenumber), str(rc)]))
 ##                            
-                        if w3 > 10 and w3 < 100 and h3>20 and (y4-y3) > 3:
+                        if w3 > 10 and w3 < 100 and h3>20 and (x4-x3) > 3:
                             with open("SubSplit.csv", 'a') as f:
                                 writer = csv.writer(f)
                                 writer.writerow(cv2.boundingRect(c) + cv2.boundingRect(c3) + tuple(['Dmark' + 'P' + str(pagenumber) + 'N' + str(rc) + '.png', str(pagenumber), str(rc), 'a']))
                             
                             new_img3=im3[y3:y3+h3,x3:x3+w3]
+                            
                             value = imageflat(new_img3)
-                            #print(str(type(value)))
-##                            flagfound = 0
-                            
-                            
-##                            with open("img_pixels.csv") as fh:
-##                                csv_reader = csv.reader (fh)
-##                                for row in csv_reader:
-##                                    #print(row)
-##                                    if (array(row) == value):
-##                                        flagfound = 1
-##                                        print("matched")
-##                                    
-##                                    #print("=======")
-##                                    
-##                                    #file_1_tuples.append(  tuple(row)  )
-##                            if flagfound == 0 and checkboxvar.get() ==1:
+
                             if checkboxvar.get() ==1:
-                                with open("img_pixels.csv", 'a') as f:
-                                    writer = csv.writer(f)
-                                    writer.writerow(value)
+                                valuematch = 0
+                                cv2.imwrite('DChar.png',new_img3)
                                 try:
-                                    #charupdateupdate(img6)
-                                    
-                                    print("No error")
+                                    deleteblanklineincsv("img_pixels.csv", 2505)
+                                    with open("img_pixels.csv") as fh:
+                                        csv_reader = csv.reader (fh)
+                                        for row in csv_reader:
+                                            #print(row)
+                                            #print(str(list(row[0:2499])).replace("'", ""))
+                                            
+                                            if str(list(row)).replace("'", "") == str(list(value)):
+                                                valuematch = 1
+                                                #print("Value Match")
                                 except:
-                                    print("This is an error message!")
-                                #print(textboxvar.get())
-                                
-                                
-                            #with open("img_pixels.csv", 'a') as f:
-                            #    writer = csv.writer(f)
-                            #    writer.writerow(value)
-                        y4 = y3        
+                                    print("Unable to open img_pixels.csv")
+                                if valuematch == 0:
+                                    try:
+                                        deleteblanklineincsv("img_pixels.csv", 2505)
+                                    except:
+                                        print("Unable to open img_pixels.csv")
+
+                                    #Update the train data
+                                    with open("img_pixels.csv", 'a') as f:
+                                        writer = csv.writer(f)
+                                        writer.writerow((value))
+                                    try:
+                                        pass
+                                        #print("No error")
+                                    except:
+                                        print("This is an error message!")
+
+                                    imgchar = Image.open('DChar.png')
+                                    #pil_image2 = img.resize((600, 500), Image.ANTIALIAS)
+                                    filename = ImageTk.PhotoImage(imgchar)
+                                    canvas = Canvas(master,height=50,width=50)
+                                    canvas.image = filename  # <--- keep reference of your image
+                                    canvas.create_image(10,60,anchor='nw',image=filename)
+                                    canvas.pack()
+                                    
+                                    print("imageupload")
+    
+                                    answer = input("Please enter the characher: ")    
+                                    #Update the target data
+                                    with open("Target.csv", 'a') as f:
+                                        writer = csv.writer(f)
+                                        
+                                        tempcon = str(ord(answer))
+                                        tempcon = np.asarray(tempcon).reshape(1)
+                                        #tempcon = ''.join(tempcon)
+                                        print(tempcon)
+                                        writer.writerow(tempcon)
+                                    try:
+                                        pass
+                                        #print("No error")
+                                    except:
+                                        print("This is an error message!")
+        
+                                        
+                                    my_data = genfromtxt('img_pixels.csv', delimiter=',')
+                                    clf = svm.SVC(gamma=0.001)
+                                    traindata = np.arange(len(my_data))
+                                    clf.fit(my_data,traindata)
+
+                                    prediction = clf.predict(value.reshape(1, -1))
+                                    print("predicted digit -> ", prediction)
+
+                        x4 = x3        
                 y2=y
             
     
@@ -307,7 +355,7 @@ textbox = Entry(master, text="ddfdfd", textvariable=textboxvar)
 #textbox.configure(width = 8, activebackground = "#33B5E5", relief = RAISED)
 textbox_window = canvas.create_window(750, 10, anchor=NW, window=textbox)
 
-outputdisplaty()
+#outputdisplaty()
 
 
 mainloop()
