@@ -124,10 +124,13 @@ def deleteblanklineincsv(filenamecsv, templen):
 
 
 def outputdisplaty():
+    subrc =0
+    deleteblanklineincsv("SubSplit.csv", 5)
     pagenu, fieldnu = [], []
     with open("SubSplit.csv") as fh:
         csv_reader = csv.reader (fh)
         for row in csv_reader:
+            subrc = subrc + 1
             #print(row)
             if "Page " + row[9] not in pagenu:
                 pagenu.append("Page " + row[9])
@@ -135,6 +138,33 @@ def outputdisplaty():
                 fieldnu.append(row[10])    
 
     print(pagenu, fieldnu)
+
+
+    arr = np.empty((subrc, 3), dtype=object)
+    
+    
+    trc = 0
+    for kerow in fieldnu:
+        with open("SubSplit.csv") as fh:
+            csv_reader = csv.reader (fh)
+            for row in csv_reader:
+                #print(row[10])
+                #print(kerow)
+                if row[10] == kerow:
+                    arr[trc, 0] = row[5]
+                    arr[trc, 1] = row[10]
+                    arr[trc, 2] = row[11]
+                    trc = trc + 1
+                    #print("sssss")
+                
+    print(arr)
+    arr2 = sorted(arr,key=lambda x: x[0])
+    print("===")
+    tempvar1 = ""
+    for trc in np.arange(subrc):
+        if str(arr2[trc][1]) == str(3):
+            tempvar1 = tempvar1 + arr2[trc][2]
+    print(tempvar1)
 
     
     tkvar = StringVar()
@@ -157,55 +187,33 @@ def outputdisplaty():
     buttonloop.configure(width = 10, activebackground = "#33B5E5", relief = RAISED)
     buttonloop_window = canvas.create_window(610, 150, anchor=NW, window=buttonloop)
 
-##    img1 = PhotoImage(file="DvalP1N5.png")
-##    w = Label(master, image=img1)
-##    
-##    w.pack()
+    textbox = Entry(master, text="ddfdfd", textvariable=textboxvar)
+    #textbox.configure(width = 8, activebackground = "#33B5E5", relief = RAISED)
+    textbox_window = canvas.create_window(750, 300, anchor=NW, window=textbox)
+    textbox.insert(0, "some text")
 
-    logo = PhotoImage(file="DvalP1N5.png")
-
-    w1 = Label(master, image=logo).pack(side="right")
-
-    explanation = """At present, only GIF and PPM/PGM
-    formats are supported, but an interface 
-    exists to allow additional image file
-    formats to be added easily."""
-
-    w2 = Label(master, 
-                  justify=LEFT,
-                  padx = 10, 
-                  text=explanation).pack(side="right")
-
-##    img1 = PhotoImage(file="DvalP1N5.png")
-##
-##    Labelloop = Label(master, image=img1)
-##    Labelloop.place(x=610,y=200,width=50,height=50)
-     
-    #Labelloop.configure(width = 300)
-    #Labelloop_window = canvas.create_window(610, 200, anchor=NW, window=Labelloop)
+    def some_callback(event): # note that you must include the event as an arg, even if you don't use it.
+        print(event)
+        #e.delete(0, "end")
+        return None
+    textbox.bind("<Button-1>", some_callback)
     
-##    
-##
-##    canvas2 = Canvas(master, width=100, height=100)
-##    canvas2.pack()
-##
-##
-##    img = Image.open("DvalP1N5.png")
-##    pil_image2 = img.resize((50, 50), Image.ANTIALIAS)
-##    filename = ImageTk.PhotoImage(pil_image2)
-##    #canvas = Canvas(master,height=600,width=900)
-##    canvas2.image = filename  # <--- keep reference of your image
-##    canvas2.create_image(610,200,anchor='nw',image=filename)
-##    canvas2.pack()
-##    
-##    Label(mainframe, text="Choose a dish").grid(row = 1, column = 1)
 
 def buttonloopfun(da):
     print(da)
 
+def displayoutput():
+    csvdata = genfromtxt('SubSplit.csv', delimiter=',')
+    print(csvdata)
+    textbox = Entry(master, text="ddfdfd", textvariable=textboxvar)
+    #textbox.configure(width = 8, activebackground = "#33B5E5", relief = RAISED)
+    textbox_window = canvas.create_window(750, 10, anchor=NW, window=textbox)
+
+
 def readimage():
     looprc2 = 10
     pagenumber = 0
+    prechar = "~"
     try:
         os.remove("SubSplit.csv")
     except:
@@ -229,6 +237,9 @@ def readimage():
             #print(len(contours))
             idx = 0
             y2 = 0
+            my_dataf = genfromtxt('img_pixels.csv', delimiter=',')
+            my_trainf = genfromtxt('Target.csv', delimiter=',')
+                                
             for c in contours:
                 x,y,w,h = cv2.boundingRect(c)
 ##                with open("MainSplit.csv", 'a') as f:
@@ -236,16 +247,16 @@ def readimage():
 ##                    #writer.writerow(str(x) + "," + str(y) + "," + str(w) + "," + str(h))
                       #writer.writerow(cv2.boundingRect(c))
                                     
-                if w>30 and h>40 and h<90 and (y2-y) > 3:
+                if w>20 and h>60 and h<130 and (y2-y) > 3:
                     imtemp = imorg.copy()
-                    cv2.rectangle(imtemp,(x,y),(x+w,y+h),(0,0,255),2)
-                    cv2.imwrite('Dmark' + 'P' + str(pagenumber) + 'N' + str(rc) + '.png',imtemp)
+                    cv2.rectangle(imtemp,(x,y),(x+w,y+h),(0,0,255),4)
+                    cv2.imwrite('Dmark' + 'P' + str(pagenumber) + 'N' + str(rc) + '.jpg',imtemp)
                     idx+=1
                     #print(str(idx) + " x = " + str(x) + " y = " + str(y) + " w = " + str(w) + " h = " + str(h))
                     new_img=im[y:y+h,x:x+w]
-                    cv2.imwrite('Dval' + 'P' + str(pagenumber) + 'N' + str(rc) + '.png',new_img)
+                    cv2.imwrite('Dval' + 'P' + str(pagenumber) + 'N' + str(rc) + '.jpg',new_img)
                     left_img = im[y:y+h,0:x]
-                    cv2.imwrite('DLeft' + 'P' + str(pagenumber) + 'N' + str(rc) + '.png',left_img)
+                    cv2.imwrite('DLeft' + 'P' + str(pagenumber) + 'N' + str(rc) + '.jpg',left_img)
                     rc = rc + 1
                     gray3 = cv2.cvtColor(new_img,cv2.COLOR_BGR2GRAY)
                     blur3 = cv2.GaussianBlur(gray3,(5,5),0)
@@ -258,20 +269,22 @@ def readimage():
 ##                            writer = csv.writer(f)
 ##                            writer.writerow(cv2.boundingRect(c) + cv2.boundingRect(c3) + tuple(['Dmark' + 'P' + str(pagenumber) + 'N' + str(rc) + '.png', str(pagenumber), str(rc)]))
 ##                            
-                        if w3 > 10 and w3 < 100 and h3>20 and (x4-x3) > 3:
-                            with open("SubSplit.csv", 'a') as f:
-                                writer = csv.writer(f)
-                                writer.writerow(cv2.boundingRect(c) + cv2.boundingRect(c3) + tuple(['Dmark' + 'P' + str(pagenumber) + 'N' + str(rc) + '.png', str(pagenumber), str(rc), 'a']))
+                        if w3 > 3 and w3 < 150 and h3 > 5 and (x4-x3) > 1:
+                            #with open("SubSplit.csv", 'a') as f:
+                            #    writer = csv.writer(f)
+                            #    writer.writerow(cv2.boundingRect(c) + cv2.boundingRect(c3) + tuple(['Dmark' + 'P' + str(pagenumber) + 'N' + str(rc) + '.png', str(pagenumber), str(rc), 'a']))
                             
                             new_img3=im3[y3:y3+h3,x3:x3+w3]
                             
                             value = imageflat(new_img3)
-
+                            prechar = '~'
                             if checkboxvar.get() ==1:
+                                
                                 valuematch = 0
                                 cv2.imwrite('DChar.png',new_img3)
                                 try:
                                     deleteblanklineincsv("img_pixels.csv", 2505)
+                                    deleteblanklineincsv("Target.csv", 1)
                                     with open("img_pixels.csv") as fh:
                                         csv_reader = csv.reader (fh)
                                         for row in csv_reader:
@@ -326,20 +339,35 @@ def readimage():
                                         print("This is an error message!")
         
                                         
-                                    my_data = genfromtxt('img_pixels.csv', delimiter=',')
-                                    clf = svm.SVC(gamma=0.001)
-                                    traindata = np.arange(len(my_data))
-                                    clf.fit(my_data,traindata)
+                                    #my_data = genfromtxt('img_pixels.csv', delimiter=',')
+                                    #my_train = genfromtxt('Target.csv', delimiter=',')
+                                    #clf = svm.SVC(gamma=0.001)
+                                    #traindata = np.arange(my_train)
+                                    #clf.fit(my_data,traindata)
 
-                                    prediction = clf.predict(value.reshape(1, -1))
-                                    print("predicted digit -> ", prediction)
+                                    #prediction = clf.predict(value.reshape(1, -1))
+                                    #print("predicted digit -> ", prediction)
+                            else:
+                                #my_data = genfromtxt('img_pixels.csv', delimiter=',')
+                                #my_train = genfromtxt('Target.csv', delimiter=',')
+                                clf = svm.SVC(gamma=0.001)
+                                #traindata = np.arange(my_train)
+                                clf.fit(my_dataf,my_trainf)
 
+                                prediction = clf.predict(value.reshape(1, -1))
+                                prechar =chr(int(prediction))
+                                print("predicted digit -> ", prechar)
+
+                            with open("SubSplit.csv", 'a') as f:
+                                writer = csv.writer(f)
+                                writer.writerow(cv2.boundingRect(c) + cv2.boundingRect(c3) + tuple(['Dmark' + 'P' + str(pagenumber) + 'N' + str(rc-1) + '.png', str(pagenumber), str(rc-1), str(prechar)]))
+        #                        writer.writerow(cv2.boundingRect(c) + cv2.boundingRect(c3) + tuple(['Dmark' + 'P' + str(pagenumber) + 'N' + str(rc) + '.png', str(pagenumber), str(rc), str(prechar)]))                            
                         x4 = x3        
                 y2=y
             
     
 # ... snip ...
-button1 = Button(master, text = "Quit", command = callback, anchor = W)
+button1 = Button(master, text = "Quit", command = outputdisplaty, anchor = W)
 button1.configure(width = 10, activebackground = "#33B5E5", relief = RAISED)
 button1_window = canvas.create_window(610, 60, anchor=NW, window=button1)
 
